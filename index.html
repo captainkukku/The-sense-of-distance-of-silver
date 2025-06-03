@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银打的距离感</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .nav {
+            display: flex;
+            background: #f8f9ff;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        .nav-item {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+        }
+        .nav-item:hover { background: rgba(78, 205, 196, 0.1); }
+        .nav-item.active {
+            background: white;
+            border-bottom-color: #4ECDC4;
+            color: #4ECDC4;
+        }
+        .content {
+            display: none;
+            padding: 30px;
+        }
+        .content.active { display: block; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4ECDC4;
+            background: white;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
+        }
+        .players-section {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .players-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .player-count {
+            background: #4ECDC4;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .player-input-wrapper {
+            position: relative;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e1e8ed;
+            transition: all 0.3s ease;
+        }
+        .player-input-wrapper:hover {
+            border-color: #4ECDC4;
+            box-shadow: 0 3px 10px rgba(78, 205, 196, 0.1);
+        }
+        .player-input-wrapper input {
+            border: none;
+            background: transparent;
+            padding: 12px 40px 12px 15px;
+            width: 100%;
+        }
+        .player-number {
+            position: absolute;
+            left: -8px;
+            top: -8px;
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .remove-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .player-input-wrapper:hover .remove-btn { opacity: 1; }
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        .btn-secondary { background: linear-gradient(45deg, #6c757d, #495057); }
+        .btn-add {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 100%;
+            margin: 0;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+        .btn-add:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .winners-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .winner-btn {
+            background: #f8f9ff;
+            border: 2px solid #e1e8ed;
+            color: #333;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .winner-btn:hover {
+            border-color: #4ECDC4;
+            background: rgba(78, 205, 196, 0.1);
+            transform: translateY(-2px);
+        }
+        .winner-btn.selected {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border-color: #4ECDC4;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #f8f9ff, #fff);
+            border-radius: 12px;
+            border-left: 4px solid #4ECDC4;
+            transition: all 0.3s ease;
+        }
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .rank {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9ff;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 3px solid #4ECDC4;
+            transition: all 0.3s ease;
+        }
+        .history-item:hover {
+            background: rgba(78, 205, 196, 0.1);
+            transform: translateX(5px);
+        }
+        .no-data {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+        .alert-success { background: linear-gradient(45deg, #28a745, #20c997); }
+        .alert-error { background: linear-gradient(45deg, #dc3545, #c82333); }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .container { margin: 10px; border-radius: 15px; }
+            .header { padding: 20px; }
+            .header h1 { font-size: 2rem; }
+            .content { padding: 20px; }
+            .grid { grid-template-columns: 1fr; gap: 20px; }
+            .nav { flex-wrap: wrap; }
+            .nav-item { min-width: 33.33%; font-size: 0.9rem; }
+            .players-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 银打的距离感</h1>
+            <p>别慌，我自有办法</p>
+        </div>
+
+        <div class="nav">
+            <div class="nav-item active" onclick="showTab('play')">🎮 开始游戏</div>
+            <div class="nav-item" onclick="showTab('stats')">📊 统计数据</div>
+            <div class="nav-item" onclick="showTab('history')">📝 历史记录</div>
+        </div>
+
+        <!-- 游戏页面 -->
+        <div id="play-content" class="content active">
+            <div class="grid">
+                <!-- 游戏设置 -->
+                <div class="card">
+                    <h3>🎲 游戏设置</h3>
+                    <div class="form-group">
+                        <label>游戏名称</label>
+                        <input type="text" id="gameType" placeholder="UNO / 狼人杀 / 剧本杀 / 自定义游戏...">
+                    </div>
+                </div>
+
+                <!-- 玩家设置 -->
+                <div class="card">
+                    <h3>👥 玩家设置</h3>
+                    <div class="players-section">
+                        <div class="players-header">
+                            <span style="font-weight: 600; color: #333;">参与玩家</span>
+                            <span class="player-count" id="playerCount">2人</span>
+                        </div>
+                        <div class="players-grid" id="playersGrid">
+                            <div class="player-input-wrapper">
+                                <div class="player-number">1</div>
+                                <input type="text" placeholder="输入玩家姓名">
+                            </div>
+                            <div class="player-input-wrapper">
+                                <div class="player-number">2</div>
+                                <input type="text" placeholder="输入玩家姓名">
+                            </div>
+                        </div>
+                        <button class="btn btn-add" onclick="addPlayer()">➕ 添加玩家 (最多8人)</button>
+                    </div>
+                    <button class="btn" onclick="startGame()">开始游戏</button>
+                </div>
+
+                <!-- 记录胜利 -->
+                <div class="card">
+                    <h3>🏆 记录胜利</h3>
+                    <div id="gameSection" style="display: none;">
+                        <p style="margin-bottom: 15px; color: #666; font-weight: 600;">
+                            当前游戏: <span id="currentGameType" style="color: #4ECDC4;"></span>
+                        </p>
+                        <div class="winners-grid" id="winnersGrid"></div>
+                        <button class="btn" onclick="recordWin()" id="recordBtn" disabled>🎉 记录胜利</button>
+                        <button class="btn btn-secondary" onclick="endGame()">❌ 结束游戏</button>
+                    </div>
+                    <div id="noGameMessage" class="no-data">
+                        请先设置游戏名称和玩家
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计页面 -->
+        <div id="stats-content" class="content">
+            <div class="grid">
+                <div class="card">
+                    <h3>📊 总体数据</h3>
+                    <div class="stats-grid" id="overallStats">
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">总游戏数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">参与玩家</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">游戏类型</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">-</div>
+                            <div class="stat-label">最受欢迎</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>🏆 玩家排行榜</h3>
+                    <div id="leaderboard">
+                        <div class="no-data">暂无数据</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史页面 -->
+        <div id="history-content" class="content">
+            <div class="card">
+                <h3>📝 游戏历史</h3>
+                <div class="form-group">
+                    <label>筛选条件</label>
+                    <select id="historyFilter" onchange="updateHistory()">
+                        <option value="">所有游戏</option>
+                    </select>
+                </div>
+                <div id="historyList">
+                    <div class="no-data">暂无记录</div>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="exportData()">📤 导出数据</button>
+                    <button class="btn btn-secondary" onclick="clearData()">🗑️ 清空数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量 - 简化版
+        var currentGame = null;
+        var gameData = { games: [], players: {}, gameTypes: [] };
+        var selectedWinner = null;
+
+        // 初始化
+        function init() {
+            loadData();
+            updateStats();
+            updateHistory();
+            updatePlayerCount();
+        }
+
+        // 显示标签页
+        function showTab(tabName) {
+            var contents = document.querySelectorAll('.content');
+            var navItems = document.querySelectorAll('.nav-item');
+            
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].classList.remove('active');
+            }
+            for (var i = 0; i < navItems.length; i++) {
+                navItems[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName + '-content').classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'stats') updateStats();
+            if (tabName === 'history') updateHistory();
+        }
+
+        // 更新玩家数量显示
+        function updatePlayerCount() {
+            var count = document.querySelectorAll('.player-input-wrapper').length;
+            document.getElementById('playerCount').textContent = count + '人';
+        }
+
+        // 添加玩家
+        function addPlayer() {
+            var grid = document.getElementById('playersGrid');
+            var currentCount = grid.children.length;
+            
+            if (currentCount >= 8) {
+                showAlert('最多支持8个玩家', 'error');
+                return;
+            }
+            
+            var wrapper = document.createElement('div');
+            wrapper.className = 'player-input-wrapper';
+            wrapper.innerHTML = '<div class="player-number">' + (currentCount + 1) + '</div>' +
+                '<input type="text" placeholder="输入玩家姓名">' +
+                '<button class="remove-btn" onclick="removePlayer(this)">×</button>';
+            grid.appendChild(wrapper);
+            updatePlayerCount();
+        }
+
+        // 移除玩家
+        function removePlayer(btn) {
+            var grid = document.getElementById('playersGrid');
+            if (grid.children.length <= 2) {
+                showAlert('至少需要2个玩家', 'error');
+                return;
+            }
+            
+            btn.parentElement.remove();
+            
+            var wrappers = grid.querySelectorAll('.player-input-wrapper');
+            for (var i = 0; i < wrappers.length; i++) {
+                wrappers[i].querySelector('.player-number').textContent = i + 1;
+            }
+            
+            updatePlayerCount();
+        }
+
+        // 开始游戏
+        function startGame() {
+            var gameType = document.getElementById('gameType').value.trim();
+            
+            var players = [];
+            var inputs = document.querySelectorAll('.player-input-wrapper input');
+            for (var i = 0; i < inputs.length; i++) {
+                var name = inputs[i].value.trim();
+                if (name) players.push(name);
+            }
+            
+            if (!gameType) {
+                showAlert('请输入游戏名称', 'error');
+                return;
+            }
+            
+            if (players.length < 2) {
+                showAlert('至少需要2个玩家', 'error');
+                return;
+            }
+            
+            currentGame = {
+                type: gameType,
+                players: players,
+                startTime: new Date()
+            };
+            
+            document.getElementById('currentGameType').textContent = gameType;
+            var winnersGrid = document.getElementById('winnersGrid');
+            winnersGrid.innerHTML = '';
+            
+            for (var i = 0; i < players.length; i++) {
+                var btn = document.createElement('button');
+                btn.className = 'winner-btn';
+                btn.textContent = players[i];
+                btn.setAttribute('data-index', i);
+                btn.onclick = function() { selectWinner(this.getAttribute('data-index')); };
+                winnersGrid.appendChild(btn);
+            }
+            
+            document.getElementById('gameSection').style.display = 'block';
+            document.getElementById('noGameMessage').style.display = 'none';
+            
+            showAlert('游戏开始！请选择胜利者', 'success');
+        }
+
+        // 选择胜利者
+        function selectWinner(index) {
+            var btns = document.querySelectorAll('.winner-btn');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.remove('selected');
+            }
+            btns[index].classList.add('selected');
+            selectedWinner = parseInt(index);
+            document.getElementById('recordBtn').disabled = false;
+        }
+
+        // 记录胜利
+        function recordWin() {
+            if (selectedWinner === null || !currentGame) return;
+            
+            var winner = currentGame.players[selectedWinner];
+            var game = {
+                id: Date.now(),
+                type: currentGame.type,
+                players: currentGame.players.slice(),
+                winner: winner,
+                timestamp: new Date(),
+                duration: new Date() - currentGame.startTime
+            };
+            
+            gameData.games.unshift(game);
+            if (gameData.gameTypes.indexOf(currentGame.type) === -1) {
+                gameData.gameTypes.push(currentGame.type);
+            }
+            
+            for (var i = 0; i < currentGame.players.length; i++) {
+                var player = currentGame.players[i];
+                if (!gameData.players[player]) {
+                    gameData.players[player] = { wins: 0, games: 0, gameTypes: {} };
+                }
+                gameData.players[player].games++;
+                
+                if (!gameData.players[player].gameTypes[currentGame.type]) {
+                    gameData.players[player].gameTypes[currentGame.type] = { wins: 0, games: 0 };
+                }
+                gameData.players[player].gameTypes[currentGame.type].games++;
+                
+                if (player === winner) {
+                    gameData.players[player].wins++;
+                    gameData.players[player].gameTypes[currentGame.type].wins++;
+                }
+            }
+            
+            saveData();
+            
+            selectedWinner = null;
+            var btns = document.querySelectorAll('.winner-btn');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.remove('selected');
+            }
+            document.getElementById('recordBtn').disabled = true;
+            
+            updateStats();
+            updateHistory();
+            
+            showAlert(winner + ' 获胜！记录已保存', 'success');
+        }
+
+        // 结束游戏
+        function endGame() {
+            currentGame = null;
+            selectedWinner = null;
+            document.getElementById('gameSection').style.display = 'none';
+            document.getElementById('noGameMessage').style.display = 'block';
+            showAlert('游戏已结束', 'success');
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            var totalGames = gameData.games.length;
+            var totalPlayers = Object.keys(gameData.players).length;
+            var totalTypes = gameData.gameTypes.length;
+            
+            var mostPopular = '-';
+            if (gameData.games.length > 0) {
+                var gameTypeCounts = {};
+                for (var i = 0; i < gameData.games.length; i++) {
+                    var type = gameData.games[i].type;
+                    gameTypeCounts[type] = (gameTypeCounts[type] || 0) + 1;
+                }
+                var maxCount = 0;
+                for (var type in gameTypeCounts) {
+                    if (gameTypeCounts[type] > maxCount) {
+                        maxCount = gameTypeCounts[type];
+                        mostPopular = type;
+                    }
+                }
+            }
+            
+            document.getElementById('overallStats').innerHTML = 
+                '<div class="stat-item"><div class="stat-number">' + totalGames + '</div><div class="stat-label">总游戏数</div></div>' +
+                '<div class="stat-item"><div class="stat-number">' + totalPlayers + '</div><div class="stat-label">参与玩家</div></div>' +
+                '<div class="stat-item"><div class="stat-number">' + totalTypes + '</div><div class="stat-label">游戏类型</div></div>' +
+                '<div class="stat-item"><div class="stat-number">' + mostPopular + '</div><div class="stat-label">最受欢迎</div></div>';
+            
+            var playerEntries = [];
+            for (var name in gameData.players) {
+                playerEntries.push([name, gameData.players[name]]);
+            }
+            playerEntries.sort(function(a, b) { return b[1].wins - a[1].wins; });
+            
+            var leaderboardHTML = '';
+            if (playerEntries.length > 0) {
+                for (var i = 0; i < playerEntries.length; i++) {
+                    var name = playerEntries[i][0];
+                    var stats = playerEntries[i][1];
+                    var winRate = Math.round(stats.wins / stats.games * 100);
+                    leaderboardHTML += 
+                        '<div class="leaderboard-item">' +
+                        '<div style="display: flex; align-items: center; gap: 15px;">' +
+                        '<div class="rank">' + (i + 1) + '</div>' +
+                        '<div><div style="font-weight: 600;">' + name + '</div>' +
+                        '<div style="font-size: 0.9rem; color: #666;">胜率: ' + winRate + '%</div></div></div>' +
+                        '<div style="text-align: right;">' +
+                        '<div style="font-weight: 600; color: #4ECDC4;">' + stats.wins + ' 胜</div>' +
+                        '<div style="font-size: 0.9rem; color: #666;">' + stats.games + ' 局</div></div></div>';
+                }
+            } else {
+                leaderboardHTML = '<div class="no-data">暂无数据</div>';
+            }
+            
+            document.getElementById('leaderboard').innerHTML = leaderboardHTML;
+        }
+
+        // 更新历史记录
+        function updateHistory() {
+            var filterHTML = '<option value="">所有游戏</option>';
+            for (var i = 0; i < gameData.gameTypes.length; i++) {
+                filterHTML += '<option value="' + gameData.gameTypes[i] + '">' + gameData.gameTypes[i] + '</option>';
+            }
+            document.getElementById('historyFilter').innerHTML = filterHTML;
+            
+            var filter = document.getElementById('historyFilter').value;
+            var filteredGames = [];
+            for (var i = 0; i < gameData.games.length; i++) {
+                if (!filter || gameData.games[i].type === filter) {
+                    filteredGames.push(gameData.games[i]);
+                }
+            }
+            
+            var historyHTML = '';
+            if (filteredGames.length > 0) {
+                for (var i = 0; i < filteredGames.length; i++) {
+                    var game = filteredGames[i];
+                    var gameNumber = gameData.games.indexOf(game) + 1;
+                    historyHTML += 
+                        '<div class="history-item">' +
+                        '<div><div style="font-weight: 600;">第 ' + (gameData.games.length - gameData.games.indexOf(game)) + ' 局 - ' + game.type + '</div>' +
+                        '<div style="font-size: 0.9rem; color: #666;">' + game.players.join(', ') + '</div></div>' +
+                        '<div style="text-align: right;">' +
+                        '<div style="font-weight: 600; color: #4ECDC4;">' + game.winner + ' 获胜</div>' +
+                        '<div style="font-size: 0.9rem; color: #666;">' + new Date(game.timestamp).toLocaleString() + '</div></div></div>';
+                }
+            } else {
+                historyHTML = '<div class="no-data">暂无记录</div>';
+            }
+            
+            document.getElementById('historyList').innerHTML = historyHTML;
+        }
+
+        // 数据存储
+        function saveData() {
+            try {
+                localStorage.setItem('gameStats', JSON.stringify(gameData));
+            } catch (e) {
+                showAlert('保存失败', 'error');
+            }
+        }
+
+        function loadData() {
+            try {
+                var saved = localStorage.getItem('gameStats');
+                if (saved) {
+                    gameData = JSON.parse(saved);
+                }
+            } catch (e) {
+                gameData = { games: [], players: {}, gameTypes: [] };
+            }
+        }
+
+        // 导出数据
+        function exportData() {
+            var csvContent = "data:text/csv;charset=utf-8,游戏类型,玩家,胜利者,时间\n";
+            for (var i = 0; i < gameData.games.length; i++) {
+                var game = gameData.games[i];
+                csvContent += game.type + ',"' + game.players.join(', ') + '",' + game.winner + ',' + new Date(game.timestamp).toLocaleString() + '\n';
+            }
+            
+            var link = document.createElement('a');
+            link.setAttribute('href', encodeURI(csvContent));
+            link.setAttribute('download', '银打的距离感_' + new Date().toISOString().split('T')[0] + '.csv');
+            link.click();
+            showAlert('数据导出成功', 'success');
+        }
+
+        // 清空数据
+        function clearData() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                gameData = { games: [], players: {}, gameTypes: [] };
+                saveData();
+                updateStats();
+                updateHistory();
+                showAlert('数据已清空', 'success');
+            }
+        }
+
+        // 显示提示
+        function showAlert(message, type) {
+            var alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-' + type;
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+            setTimeout(function() {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 3000);
+        }
+
+        // 页面加载完成后初始化
+        setTimeout(function() {
+            init();
+        }, 100);
+    </script>
+</body>
+</html>
